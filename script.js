@@ -13,6 +13,7 @@ let opciones = {
     "2": AgregarMascota,
     "3": MascotaRegistrada,
     "4": MostrarMascotasNombre,
+    "5": ActualizarEstado
 }
 function iniciarVeterinaria(){
     mostrarMenu();
@@ -132,12 +133,12 @@ function MascotaRegistrada(){
     if (mascotas.length > 0){
         setTimeout(() => {
             alert("Mascotas registradas:\n" + mascotas.map(m => `${m.nombre} (${m.especie}) edad: ${m.edad} peso: ${m.peso} Salud: ${m.EstadoSalud} ID dueño: ${m.idDueño}`).join('\n'));
-            mostrarMenu()
+            return mostrarMenu()
         }, 1500);
     }else{
         setTimeout(()=>{
             alert("No se ha registrado ninguna mascota")
-            mostrarMenu()
+            return mostrarMenu()
         },1500)
     }
 }
@@ -155,17 +156,128 @@ function BuscarMascota(){
 }
 function MostrarMascotasNombre(){
     let nombre = prompt("Escribe el nombre de la mascota:").toLowerCase()
+    if(!nombre){
+        alert("Nombre no puede estar vacio")
+        return mostrarMenu()
+    }
     alert("Cargando mascotas... (Puede tardar 1.5 segundos)")
 
     BuscarMascota(nombre)
     .then((coincidencias)=>{
         alert("Mascotas encontradas:\n", coincidencias.map(c => `${c.nombre} (${c.especie})`).join("\n"))
-        mostrarMenu()
+        return mostrarMenu()
     })
     .catch((error)=>{
         alert(error);
-        mostrarMenu();
+        return mostrarMenu();
     })
 }
+function Wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
+async function ActualizarEstado() {
+    if (mascotas.length === 0) {
+        alert("No hay mascotas registradas");
+        return mostrarMenu();
+    }
+
+    let nombre = prompt("Escribe el nombre de la mascota:");
+    if (!nombre) {
+        alert("Nombre no puede estar vacío");
+        return mostrarMenu();
+    }
+
+    const mascota = mascotas.find(m => m.nombre.toLowerCase().startsWith(nombre.toLowerCase()));
+    if (!mascota) {
+        alert("No hay mascotas con ese nombre");
+        return mostrarMenu();
+    }
+
+    alert("Esperando diagnóstico del veterinario... (1 segundo)");
+    await Wait(1000);
+
+    let nuevoEstado = prompt(`Ingrese el nuevo estado de salud (${estadosSalud.join(", ")}):`);
+    if (!nuevoEstado) {
+        alert("El estado no puede estar vacío");
+        return mostrarMenu();
+    } else if (!estadosSalud.includes(nuevoEstado.toLowerCase())) {
+        alert("Ingrese un estado válido");
+        return mostrarMenu();
+    }
+
+    mascota.EstadoSalud = nuevoEstado.toLowerCase();
+    alert(`Estado de salud actualizado con éxito a ${nuevoEstado}`);
+    mostrarMenu();
+}
+function EliminarMascota() {
+    if (mascotas.length === 0) {
+        alert("No hay mascotas registradas");
+        return mostrarMenu();
+    }
+
+    let nombre = prompt("Escribe el nombre de la mascota que deseas eliminar:");
+    if (!nombre) {
+        alert("El nombre no puede estar vacío");
+        return mostrarMenu();
+    }
+
+    const mascota = mascotas.find(m => m.nombre.toLowerCase() === nombre.toLowerCase());
+    if (!mascota) {
+        alert("No se encontró una mascota con ese nombre");
+        return mostrarMenu();
+    }
+
+    const confirmacion = confirm(`¿Estás seguro de que deseas eliminar a ${mascota.nombre}?`);
+    if (!confirmacion) {
+        alert("Eliminación cancelada.");
+        return mostrarMenu();
+    }
+
+    alert("Procesando eliminación... (espere 2 segundos)");
+
+    new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, 2000);
+    }).then(() => {
+        const index = mascotas.findIndex(m => m.id === mascota.id);
+        if (index !== -1) {
+            mascotas.splice(index, 1);
+            alert(`Mascota ${mascota.nombre} eliminada con éxito.`);
+        } else {
+            alert("Hubo un error al intentar eliminar la mascota.");
+        }
+        mostrarMenu();
+    });
+}
+async function verMascotasDeDueño() {
+    const cedula = prompt('Ingrese la cédula del dueño:');
+    if (!cedula) {
+        alert('La cédula no puede estar vacía.');
+        return mostrarMenu();
+    }
+
+    alert('Cargando información del dueño... (esto tomará 2 segundos)');
+    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const dueño = dueños.find(d => d.cedula === cedula);
+    if (!dueño) {
+        alert('No se encontró un dueño con esa cédula.');
+        return mostrarMenu();
+    }
+
+    const mascotasDueño = mascotas.filter(m => m.idDueño === dueño.id);
+    if (mascotasDueño.length === 0) {
+        alert(`El dueño ${dueño.nombre} no tiene mascotas registradas.`);
+    } else {
+        let lista = `🐾 MASCOTAS DE ${dueño.nombre.toUpperCase()} 🐾\n\n`;
+        mascotasDueño.forEach(m => {
+            lista += `ID: ${m.id} | Nombre: ${m.nombre} | Especie: ${m.especie} | Edad: ${m.edad} años | Peso: ${m.peso} kg | Salud: ${m.estadoSalud}\n`;
+        });
+        alert(lista);
+    }
+    mostrarMenu();
+}
 window.onload = iniciarVeterinaria;
