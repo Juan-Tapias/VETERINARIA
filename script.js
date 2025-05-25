@@ -13,7 +13,10 @@ let opciones = {
     "2": AgregarMascota,
     "3": MascotaRegistrada,
     "4": MostrarMascotasNombre,
-    "5": ActualizarEstado
+    "5": ActualizarEstado,
+    "6": EliminarMascota,
+    "7": verMascotasDeDueño,
+    "8": salir
 }
 function iniciarVeterinaria(){
     mostrarMenu();
@@ -279,5 +282,8 @@ async function verMascotasDeDueño() {
         alert(lista);
     }
     mostrarMenu();
+}
+function salir(){
+    alert("Hasta luego")
 }
 window.onload = iniciarVeterinaria;
